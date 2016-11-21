@@ -2,7 +2,7 @@ var gulp = require('gulp');
 
 var concat = require('gulp-concat');
 // var connect = require('gulp-connect');
-// var eslint = require('gulp-eslint');
+var eslint = require('gulp-eslint');
 // var file = require('gulp-file');
 // var htmlv = require('gulp-html-validator');
 var insert = require('gulp-insert');
@@ -46,15 +46,18 @@ var testFiles = [
 
 // gulp.task('bower', bowerTask);
 gulp.task('build', buildTask);
+
 // gulp.task('package', packageTask);
 // gulp.task('coverage', coverageTask);
 // gulp.task('watch', watchTask);
-// gulp.task('lint', lintTask);
+
+gulp.task('lint', lintTask);
+gulp.task('validHTML', validHTMLTask);
+gulp.task('unittest', unittestTask);
 gulp.task('test', ['lint', 'validHTML', 'unittest']);
+
 // gulp.task('size', ['library-size', 'module-sizes']);
 // gulp.task('server', serverTask);
-// gulp.task('validHTML', validHTMLTask);
-// gulp.task('unittest', unittestTask);
 // gulp.task('unittestWatch', unittestWatchTask);
 // gulp.task('library-size', librarySizeTask);
 // gulp.task('module-sizes', moduleSizesTask);
@@ -66,19 +69,19 @@ gulp.task('test', ['lint', 'validHTML', 'unittest']);
  * Generates the bower.json manifest file which will be pushed along release tags.
  * Specs: https://github.com/bower/spec/blob/master/json.md
  */
-function bowerTask() {
-  var json = JSON.stringify({
-      name: package.name,
-      description: package.description,
-      homepage: package.homepage,
-      license: package.license,
-      version: package.version,
-      main: outDir + "Chart.js"
-    }, null, 2);
+// function bowerTask() {
+//   var json = JSON.stringify({
+//       name: package.name,
+//       description: package.description,
+//       homepage: package.homepage,
+//       license: package.license,
+//       version: package.version,
+//       main: outDir + "Chart.js"
+//     }, null, 2);
 
-  return file('bower.json', json, { src: true })
-    .pipe(gulp.dest('./'));
-}
+//   return file('bower.json', json, { src: true })
+//     .pipe(gulp.dest('./'));
+// }
 
 function buildTask() {
 
@@ -114,26 +117,29 @@ function buildTask() {
 }
 
 
-//Zipを作成
-function packageTask() {
-  return merge(
-      // gather "regular" files landing in the package root
-      gulp.src([outDir + '*.js', 'LICENSE.md']),
+// //Zipを作成
+// function packageTask() {
+//   return merge(
+//       // gather "regular" files landing in the package root
+//       gulp.src([outDir + '*.js', 'LICENSE.md']),
 
-      // since we moved the dist files one folder up (package root), we need to rewrite
-      // samples src="../dist/ to src="../ and then copy them in the /samples directory.
-      gulp.src('./samples/**/*', { base: '.' })
-        .pipe(streamify(replace(/src="((?:\.\.\/)+)dist\//g, 'src="$1')))
-  )
-  // finally, create the zip archive
-  .pipe(zip('Chart.js.zip'))
-  .pipe(gulp.dest(outDir));
-}
+//       // since we moved the dist files one folder up (package root), we need to rewrite
+//       // samples src="../dist/ to src="../ and then copy them in the /samples directory.
+//       gulp.src('./samples/**/*', { base: '.' })
+//         .pipe(streamify(replace(/src="((?:\.\.\/)+)dist\//g, 'src="$1')))
+//   )
+//   // finally, create the zip archive
+//   .pipe(zip('Chart.js.zip'))
+//   .pipe(gulp.dest(outDir));
+// }
 
 //
 function lintTask() {
+
   var files = [
+    srcDir + '*.js',
     srcDir + '**/*.js',
+    testDir + '*.js',
     testDir + '**/*.js'
   ];
 
@@ -141,6 +147,7 @@ function lintTask() {
   // compare to what the current codebase can support, and since it's not straightforward
   // to fix, let's turn them as warnings and rewrite code later progressively.
   var options = {
+    "extends": ["eslint:recommended"],
     rules: {
       'complexity': [1, 6],
       'max-statements': [1, 30]
